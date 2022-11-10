@@ -13,9 +13,10 @@ import { CoinbaseWalletConnector } from 'wagmi/connectors/coinbaseWallet'
 import { InjectedConnector } from 'wagmi/connectors/injected'
 import { MetaMaskConnector } from 'wagmi/connectors/metaMask'
 import { WalletConnectConnector } from 'wagmi/connectors/walletConnect'
+import { ChakraProvider } from '@chakra-ui/react'
 
 const { chains, provider, webSocketProvider } = configureChains(defaultChains, [
-  alchemyProvider({ apiKey: 'vkZQEkAUJLbGxNUbftlXN2OGkJydDyrs' }),
+  alchemyProvider({ apiKey: 'cwozscIRJ6ML9o8e1E2CJ2szoJ8S4uqU' }),
   publicProvider(),
 ])
  
@@ -50,7 +51,9 @@ const client = createClient({
 function MyApp({ Component, pageProps }) {
   return (
     <WagmiConfig client={client}>
-      <Component {...pageProps} />
+      <ChakraProvider>
+        <Component {...pageProps} />
+      </ChakraProvider>
     </WagmiConfig>
   )
 }
