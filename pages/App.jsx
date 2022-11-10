@@ -108,8 +108,8 @@ export default function App() {
     events.map(async (item) => {
       const decodedEvent = await item.decode(item.data, item.topics);
       console.log('decodedEvents of Gnosis Contract', decodedEvent);
-      // const parsedMessage = ethers.utils.defaultAbiCoder.decode(decodedEvent.message, (uint256, address, address, uint16, uint256, bytes));
-      // console.log('parsedMessage', parsedMessage);
+      const parsedMessage = await ethers.utils.defaultAbiCoder.decode(['uint256', 'address', 'address', 'uint16', 'uint256', 'bytes'], decodedEvent.message);
+      console.log('parsedMessage', parsedMessage);
       const txreceipt = await item.getTransactionReceipt();
       console.log('gnosis txreceipt:', txreceipt);
       const tx = await item.getTransaction();
