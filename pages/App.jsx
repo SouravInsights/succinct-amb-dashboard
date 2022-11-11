@@ -101,7 +101,7 @@ export default function App() {
     if(isLoading === false) {
       const fetchSuccinctGnosisContractData = async () => {
         let eventFilter = SuccinctGnosisContract.filters.ExecutedMessage();
-        let events = await SuccinctGnosisContract.queryFilter(eventFilter, "0x0", "0x17B69707");
+        let events = await SuccinctGnosisContract.queryFilter(eventFilter, "0x0", "0x1769707");
         // console.log('Gnosis Contract events:', events);
 
         const eventsData = await Promise.all(
