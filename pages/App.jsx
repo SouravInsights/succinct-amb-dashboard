@@ -1,6 +1,5 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { ethers } from "ethers";
-import SuccinctABI from "../lib/abis/SuccinctABI.json";
 import { 
   Box, 
   Flex,
@@ -22,8 +21,8 @@ import {
   useReactTable,
 } from '@tanstack/react-table'
 
-import { useConnect, useProvider } from 'wagmi';
-import { SuccinctGnosisContract, gasSpent, truncateTxHash } from '../utils/general';
+import { useConnect } from 'wagmi';
+import { SuccinctGnosisContract, gasSpent, truncateTxHash, truncateAddress } from '../utils/general';
 
 const defaultData = [
   {
@@ -92,61 +91,43 @@ const columns = [
 ]
 
 export default function App() {
-  const { connect, connectors, isLoading, error } = useConnect();
-  const provider = useProvider();
+  const { connect, connectors, isLoading } = useConnect();
 
    /* 
     Succinct Gnosis Events 
   */
 
-  const fetchSuccinctGnosisContractData = async () => {
-    let eventFilter = SuccinctGnosisContract.filters.ExecutedMessage();
+  useEffect(() => {
+    if(isLoading === false) {
+      const fetchSuccinctGnosisContractData = async () => {
+        let eventFilter = SuccinctGnosisContract.filters.ExecutedMessage();
+        let events = await SuccinctGnosisContract.queryFilter(eventFilter, "0x0", "0x17B69707");
+        // console.log('Gnosis Contract events:', events);
 
-    let events = await SuccinctGnosisContract.queryFilter(eventFilter, "0x0", "0x17665A7");
-    console.log('Gnosis Contract events:', events);
+        const eventsData = await Promise.all(
+          events.map(async (item) => {
+            const decodedEvent = await item.decode(item.data, item.topics);
+            const parsedMessage = await ethers.utils.defaultAbiCoder.decode(['uint256', 'address', 'address', 'uint16', 'uint256', 'bytes'], decodedEvent.message);
+            const txreceipt = await item.getTransactionReceipt();
+            const messageData = {
+              message: truncateTxHash(decodedEvent.message),
+              txHash: truncateTxHash(txreceipt.transactionHash),
+              sender: truncateAddress(parsedMessage[1]),
+              status: decodedEvent.status,
+              recipient: truncateAddress(parsedMessage[2]),
+              gasPaid: `${gasSpent(txreceipt)} xDAI`,
+              executedBy: truncateAddress(txreceipt.from),
+            }
+            return messageData;
+          })
+        )
+        // console.log('eventsData', eventsData);
+        setData(eventsData);
+      }
 
-    events.map(async (item) => {
-      const decodedEvent = await item.decode(item.data, item.topics);
-      console.log('decodedEvents of Gnosis Contract', decodedEvent);
-      const parsedMessage = await ethers.utils.defaultAbiCoder.decode(['uint256', 'address', 'address', 'uint16', 'uint256', 'bytes'], decodedEvent.message);
-      console.log('parsedMessage', parsedMessage);
-      const txreceipt = await item.getTransactionReceipt();
-      console.log('gnosis txreceipt:', txreceipt);
-      const tx = await item.getTransaction();
-      console.log('Gnosis tx:', tx);
-    })
-  }
-
-  fetchSuccinctGnosisContractData();
-
-  
-  /* 
-    Succinct Goreli Events 
-  */
-
-  const SuccinctGoreliContract = new ethers.Contract(
-    '0x68787ab0ca5a4a8cc82177b4e4f206765ce39956',
-    SuccinctABI,
-    provider
-  )
-
-  const fetchSuccinctGoreliContractData = async () => {
-    let eventFilter = SuccinctGoreliContract.filters.SentMessage();
-
-    const events = await SuccinctGoreliContract.queryFilter(eventFilter, "0x0", "0x762890");
-    console.log('Goreli events:', events);
-
-    events.map(async (item) => {
-      const decodedEvent = await item.decode(item.data, item.topics);
-      console.log('decodedEvents from Goreli Contract', decodedEvent);
-      const txreceipt = await item.getTransactionReceipt();
-      console.log('Goreli txreceipt:', txreceipt);
-      const tx = await item.getTransaction();
-      console.log('Goreli tx:', tx);
-    })
-  }
-
-  fetchSuccinctGoreliContractData();
+      fetchSuccinctGnosisContractData();
+    }
+  }, []);
 
   const [data, setData] = React.useState(() => [...defaultData]);
 
@@ -156,28 +137,18 @@ export default function App() {
     getCoreRowModel: getCoreRowModel(),
   })
 
-  const hash = truncateTxHash('0xf1c02eeba51e8b848b7f288f83967832bc469a82a237097370f21aa8a849409f');
-  console.log('hash:', hash)
-
   return (
     <Box>
       <ButtonGroup>
         {connectors?.map((connector) => (
           <Button
-            disabled={!connector?.ready}
             key={connector?.id}
             onClick={() => connect({ connector })}
           >
             {connector?.name}
-            {!connector?.ready && ' (unsupported)'}
-            {isLoading &&
-              connector.id === pendingConnector?.id &&
-              ' (connecting)'}
           </Button>
         ))}
       </ButtonGroup>
-      {error && <div>{error.message}</div>}
-
       <Flex my='12rem' justify='center' align='center'>
         <TableContainer>
           <Table size="sm" variant='striped' colorScheme='teal'>

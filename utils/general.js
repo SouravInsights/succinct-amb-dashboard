@@ -14,7 +14,7 @@ export const gasSpent = (receipt) => {
 }
 
 export const truncateAddress = (addy) =>
-  `${addy?.slice(0, 6)}...${addr.slice(-4)}`;
+  `${addy?.slice(0, 6)}...${addy.slice(-4)}`;
 
 export const truncateTxHash = (hash) =>
   `${hash?.slice(0, 18)}...`;
