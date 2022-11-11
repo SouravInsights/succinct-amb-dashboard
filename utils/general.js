@@ -18,3 +18,13 @@ export const truncateAddress = (addy) =>
 
 export const truncateTxHash = (hash) =>
   `${hash?.slice(0, 18)}...`;
+
+export function peginateData(options, data) {
+  return {
+    rows: data.slice(
+      options.pageIndex * options.pageSize,
+      (options.pageIndex + 1) * options.pageSize
+    ),
+    pageCount: Math.ceil(data.length / options.pageSize),
+  }
+}

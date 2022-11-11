@@ -1,14 +1,18 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { ethers } from "ethers";
 import { 
   Box, 
   Flex,
+  HStack,
+  Text,
+  Input,
+  Select,
   Button, 
   ButtonGroup, 
+  Skeleton,
   Table,
   Thead,
   Tbody,
-  Tfoot,
   Tr,
   Th,
   Td,
@@ -19,40 +23,10 @@ import {
   flexRender,
   getCoreRowModel,
   useReactTable,
-} from '@tanstack/react-table'
+} from '@tanstack/react-table';
 
 import { useConnect } from 'wagmi';
-import { SuccinctGnosisContract, gasSpent, truncateTxHash, truncateAddress } from '../utils/general';
-
-const defaultData = [
-  {
-    message: '0000000000000e8a7f02499402a...',
-    txHash: '0xf1c02eeba51e8b84...',
-    sender: '0xF95f...226e',
-    status: true,
-    recipient: '0xF95f...226e',
-    gasPaid: 0.000919752004292176,
-    executedBy: '0xF95f...226e',
-  },
-  {
-    message: '0000000000000e8a7f02499402a...',
-    txHash: '0xf1c02eeba51e8b84...',
-    sender: '0xF95f...226e',
-    status: true,
-    recipient: '0xF95f...226e',
-    gasPaid: 0.000919752004292176,
-    executedBy: '0xF95f...226e',
-  },
-  {
-    message: '0000000000000e8a7f02499402a...',
-    txHash: '0xf1c02eeba51e8b84...',
-    sender: '0xF95f...226e',
-    status: false,
-    recipient: '0xF95f...226e',
-    gasPaid: 0.000919752004292176,
-    executedBy: '0xF95f...226e',
-  },
-]
+import { SuccinctGnosisContract, gasSpent, truncateTxHash, truncateAddress, peginateData } from '../utils/general';
 
 const columnHelper = createColumnHelper();
 
@@ -91,18 +65,17 @@ const columns = [
 ]
 
 export default function App() {
-  const { connect, connectors, isLoading } = useConnect();
-
-   /* 
+  const { connect, connectors, isLoading, } = useConnect();
+  
+  /* 
     Succinct Gnosis Events 
   */
 
   useEffect(() => {
-    if(isLoading === false) {
+    if(!isLoading && connectors) {
       const fetchSuccinctGnosisContractData = async () => {
         let eventFilter = SuccinctGnosisContract.filters.ExecutedMessage();
         let events = await SuccinctGnosisContract.queryFilter(eventFilter, "0x0", "0x17B1CCC");
-        console.log('Gnosis Contract events:', events);
 
         if(events) {
           const eventsData = await Promise.all(
@@ -122,20 +95,49 @@ export default function App() {
               return messageData;
             })
           )
-          // console.log('eventsData', eventsData);
           setData(eventsData);
         }
       }
 
       fetchSuccinctGnosisContractData();
     }
-  }, []);
+  }, [isLoading, connectors]);
 
+  const defaultData = React.useMemo(() => [], []);
   const [data, setData] = React.useState(() => [...defaultData]);
 
+  const [{ pageIndex, pageSize }, setPagination] =
+  useState({
+    pageIndex: 0,
+    pageSize: 10,
+  })
+
+  const fetchDataOptions = {
+    pageIndex,
+    pageSize
+  };
+
+  const paginatedData = peginateData(fetchDataOptions, data);
+
+  const pagination = React.useMemo(
+    () => ({
+      pageIndex,
+      pageSize,
+    }),
+    [pageIndex, pageSize]
+  )
+
   const table = useReactTable({
-    data,
+    data: paginatedData?.rows ?? defaultData,
     columns,
+    pageCount: paginatedData?.pageCount ?? -1,
+    state: {
+      pagination,
+    },
+    onPaginationChange: setPagination,
+    getCoreRowModel: getCoreRowModel(),
+    manualPagination: true,
+    debugTable: true,
     getCoreRowModel: getCoreRowModel(),
   })
 
@@ -151,7 +153,7 @@ export default function App() {
           </Button>
         ))}
       </ButtonGroup>
-      <Flex my='12rem' justify='center' align='center'>
+      <Flex mt='12rem' mb="40px" justify='center' align='center'>
         <TableContainer>
           <Table size="sm" variant='striped' colorScheme='teal'>
             <Thead>
@@ -181,25 +183,70 @@ export default function App() {
                 </Tr>
               ))}
             </Tbody>
-            <Tfoot>
-              {table.getFooterGroups().map(footerGroup => (
-                <Tr key={footerGroup.id}>
-                  {footerGroup.headers.map(header => (
-                    <Th key={header.id}>
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                            header.column.columnDef.footer,
-                            header.getContext()
-                          )}
-                    </Th>
-                  ))}
-                </Tr>
-              ))}
-            </Tfoot>
           </Table>
         </TableContainer>
       </Flex>
+      <HStack justify='center'>
+        <Button  
+          onClick={() => table.setPageIndex(0)} 
+          isisDisabled={!table.getCanPreviousPage()}
+        >
+          {'<<'}
+        </Button>
+        <Button
+          onClick={() => table.previousPage()}
+          isisDisabled={!table.getCanPreviousPage()}
+        >
+          {'<'}
+        </Button>
+        <Button
+          onClick={() => table.nextPage()}
+          isDisabled={!table.getCanNextPage()}
+        >
+          {'>'}
+        </Button>
+        <Button
+          onClick={() => table.setPageIndex(table.getPageCount() - 1)}
+          isDisabled={!table.getCanNextPage()}
+        >
+          {'>>'}
+        </Button>
+        <HStack>
+          <Text as='span'>
+            Page &nbsp;
+            <Text as='span' fontWeight='bold'>
+              {table.getState().pagination.pageIndex + 1} of{' '}
+              {table.getPageCount()}
+            </Text>
+          </Text>
+          
+          <Text as='span'>
+            | Go to page:
+          </Text>
+            <Input
+              type="number"
+              defaultValue={table.getState().pagination.pageIndex + 1}
+              onChange={e => {
+                const page = e.target.value ? Number(e.target.value) - 1 : 0
+                table.setPageIndex(page)
+              }}
+              width='50px'
+            />
+        </HStack>
+        <Select
+          value={table.getState().pagination.pageSize}
+          onChange={e => {
+            table.setPageSize(Number(e.target.value))
+          }}
+          width='120px'
+        >
+          {[10, 20, 30, 40, 50].map(pageSize => (
+            <option key={pageSize} value={pageSize}>
+              Show {pageSize}
+            </option>
+          ))}
+        </Select>
+      </HStack>
     </Box>
   );
 };
