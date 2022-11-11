@@ -101,28 +101,30 @@ export default function App() {
     if(isLoading === false) {
       const fetchSuccinctGnosisContractData = async () => {
         let eventFilter = SuccinctGnosisContract.filters.ExecutedMessage();
-        let events = await SuccinctGnosisContract.queryFilter(eventFilter, "0x0", "0x1769707");
-        // console.log('Gnosis Contract events:', events);
+        let events = await SuccinctGnosisContract.queryFilter(eventFilter, "0x0", "0x17B1CCC");
+        console.log('Gnosis Contract events:', events);
 
-        const eventsData = await Promise.all(
-          events.map(async (item) => {
-            const decodedEvent = await item.decode(item.data, item.topics);
-            const parsedMessage = await ethers.utils.defaultAbiCoder.decode(['uint256', 'address', 'address', 'uint16', 'uint256', 'bytes'], decodedEvent.message);
-            const txreceipt = await item.getTransactionReceipt();
-            const messageData = {
-              message: truncateTxHash(decodedEvent.message),
-              txHash: truncateTxHash(txreceipt.transactionHash),
-              sender: truncateAddress(parsedMessage[1]),
-              status: decodedEvent.status,
-              recipient: truncateAddress(parsedMessage[2]),
-              gasPaid: `${gasSpent(txreceipt)} xDAI`,
-              executedBy: truncateAddress(txreceipt.from),
-            }
-            return messageData;
-          })
-        )
-        // console.log('eventsData', eventsData);
-        setData(eventsData);
+        if(events) {
+          const eventsData = await Promise.all(
+            events.map(async (item) => {
+              const decodedEvent = await item.decode(item.data, item.topics);
+              const parsedMessage = await ethers.utils.defaultAbiCoder.decode(['uint256', 'address', 'address', 'uint16', 'uint256', 'bytes'], decodedEvent.message);
+              const txreceipt = await item.getTransactionReceipt();
+              const messageData = {
+                message: truncateTxHash(decodedEvent.message),
+                txHash: truncateTxHash(txreceipt.transactionHash),
+                sender: truncateAddress(parsedMessage[1]),
+                status: decodedEvent.status,
+                recipient: truncateAddress(parsedMessage[2]),
+                gasPaid: `${gasSpent(txreceipt)} xDAI`,
+                executedBy: truncateAddress(txreceipt.from),
+              }
+              return messageData;
+            })
+          )
+          // console.log('eventsData', eventsData);
+          setData(eventsData);
+        }
       }
 
       fetchSuccinctGnosisContractData();
