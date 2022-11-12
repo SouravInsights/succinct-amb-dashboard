@@ -1,10 +1,11 @@
-import '../styles/globals.css'
+import '../styles/globals.css';
+import { Global, css } from '@emotion/react';
 import {
   WagmiConfig,
   createClient,
   defaultChains,
   configureChains,
-} from 'wagmi'
+} from 'wagmi';
  
 import { alchemyProvider } from 'wagmi/providers/alchemy'
 import { publicProvider } from 'wagmi/providers/public'
@@ -15,10 +16,23 @@ import { MetaMaskConnector } from 'wagmi/connectors/metaMask'
 import { WalletConnectConnector } from 'wagmi/connectors/walletConnect'
 import { ChakraProvider } from '@chakra-ui/react';
 
+const GlobalStyle = () => {
+  return (
+    <Global
+      styles={css`
+        body {
+          background: black;
+          min-height: 100vh;
+        }
+      `}
+    />
+  );
+};
+
 const { chains, provider, webSocketProvider } = configureChains(defaultChains, [
   alchemyProvider({ apiKey: 'cwozscIRJ6ML9o8e1E2CJ2szoJ8S4uqU' }),
   publicProvider(),
-])
+]);
  
 const client = createClient({
   autoConnect: true,
@@ -52,6 +66,7 @@ function MyApp({ Component, pageProps }) {
   return (
     <WagmiConfig client={client}>
       <ChakraProvider>
+        <GlobalStyle />
         <Component {...pageProps} />
       </ChakraProvider>
     </WagmiConfig>
