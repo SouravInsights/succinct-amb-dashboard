@@ -12,13 +12,15 @@ import {
   useDisclosure,
 } from '@chakra-ui/react';
 
-import { useConnect, useNetwork, useSwitchNetwork } from 'wagmi';
+import { useConnect, useNetwork, useSwitchNetwork,useAccount } from 'wagmi';
 import { SuccinctGnosisContract, gasSpent, truncateTxHash, truncateAddress, peginateData } from '../utils/general';
 import { DataTable } from "../components/DataTable";
 import NavBar from "../components/NavBar";
 
 export default function App() {
+  const { isConnected, address } = useAccount()
   const { connect, connectors, isLoading, pendingConnector } = useConnect();
+  console.log('isConnected:', isConnected);
   
   const { chain } = useNetwork();
   console.log('chain:', chain);
@@ -31,7 +33,7 @@ export default function App() {
   */
 
   useEffect(() => {
-    if(!isLoading && connectors) {
+    if(isConnected && chain?.id === 100) {
       const fetchSuccinctGnosisContractData = async () => {
         let eventFilter = SuccinctGnosisContract.filters.ExecutedMessage();
         let events = await SuccinctGnosisContract.queryFilter(eventFilter, "0x0", "0x17B1CCC");
@@ -60,7 +62,7 @@ export default function App() {
 
       fetchSuccinctGnosisContractData();
     }
-  }, [isLoading, connectors]);
+  }, [isConnected, chain?.id]);
 
   const { isOpen: isWalletModalOpen, onOpen: onWalletModalOpen, onClose: onWalletModalClose } = useDisclosure();
 
@@ -69,7 +71,7 @@ export default function App() {
 
   return (
     <Box >
-      <NavBar connectWalletClick={onWalletModalOpen} />
+      <NavBar connectWalletClick={onWalletModalOpen} isConnected={isConnected} address={address} />
       <Modal isOpen={isWalletModalOpen} onClose={onWalletModalClose} isCentered closeOnOverlayClick>
         <ModalOverlay  style={{ backdropFilter: 'blur(16px)' }} />
         <ModalContent bg='#5a43cc'>
@@ -120,13 +122,17 @@ export default function App() {
         </ModalContent>
       </Modal> */}
       <Flex justify='center' align='center' my='8rem'>
-        {connectors && chain?.id != 100 ? (
-          <Button
-            onClick={() => switchNetwork(100)}
-            bg='#5a43cc' color='white' _hover={{ bg: "#4731b5"}} _active={{ bg: "#4731b5"}}
-          >
-            Switch to Gnosis
+        {!isConnected ? (
+          <Button bg='#5a43cc' color='white' _hover={{ bg: "#4731b5"}} _active={{ bg: "#4731b5"}} onClick={onWalletModalOpen}>
+            Connect Your Wallet
           </Button>
+        ) : chain?.id != 100 ? (
+            <Button
+              onClick={() => switchNetwork(100)}
+              bg='#5a43cc' color='white' _hover={{ bg: "#4731b5"}} _active={{ bg: "#4731b5"}}
+            >
+              Switch to Gnosis
+            </Button>
         ) : (
           <DataTable data={data} />
         )}
