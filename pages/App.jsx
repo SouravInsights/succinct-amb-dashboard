@@ -19,11 +19,16 @@ import { NavBar, DataTable, Section } from "../components";
 export default function App() {
   const { isConnected, address } = useAccount()
   const { connect, connectors, isLoading, pendingConnector } = useConnect();
-  console.log('isConnected:', isConnected);
-  
+
+  const { isOpen: isWalletModalOpen, onOpen: onWalletModalOpen, onClose: onWalletModalClose } = useDisclosure();
+
   const { chain } = useNetwork();
-  console.log('chain:', chain);
-  const { chains, pendingChainId, switchNetwork } = useSwitchNetwork();
+  const { switchNetwork } = useSwitchNetwork();
+
+  const handleModalClick = (connector) => {
+    connect({ connector });
+    onWalletModalClose();
+  }
 
   const [data, setData] = useState(() => [], []);
 
@@ -63,11 +68,6 @@ export default function App() {
     }
   }, [isConnected, chain?.id]);
 
-  const { isOpen: isWalletModalOpen, onOpen: onWalletModalOpen, onClose: onWalletModalClose } = useDisclosure();
-
-  // const [ networkModalisOpen, setNetworkModalIsOpen ] = useState();
-  // const { isOpen: isNetworkModalOpen, onOpen: onNetworkModalOpen, onClose: onNetworkModalClose } = useDisclosure();
-
   return (
     <Box >
       <NavBar connectWalletClick={onWalletModalOpen} isConnected={isConnected} address={address} />
@@ -79,7 +79,7 @@ export default function App() {
               {connectors?.map((connector) => (
                 <Button
                   key={connector?.id}
-                  onClick={() => connect({ connector })}
+                  onClick={() => handleModalClick(connector)}
                   isDisabled={!connector.ready}
                   w='full'
                   bg='#5a43cc' color='white' 
