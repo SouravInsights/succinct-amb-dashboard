@@ -21,7 +21,7 @@ const GlobalStyle = () => {
     <Global
       styles={css`
         body {
-          background: black;
+          background: white;
           min-height: 100vh;
         }
       `}

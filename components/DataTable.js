@@ -125,14 +125,14 @@ export const DataTable = ({ data }) => {
   }, [table.getState().columnFilters[0]?.id])
 
   return (
-    <VStack spacing={12}>
-      <TableContainer maxWidth='1000px' bg='black' color='white'>
+    <VStack spacing={12} my={16}>
+      <TableContainer maxWidth='1000px' bg='white' color='white'>
         <Table color='#5a43cc'>
           <Thead>
             {table.getHeaderGroups().map(headerGroup => (
               <Tr key={headerGroup.id}>
                 {headerGroup.headers.map(header => (
-                  <Th border='2px' borderColor='#5a43cc' color="#5a43cc"  key={header.id} colSpan={header.colSpan}>
+                  <Th border='4px' borderColor='#5a43cc' color='#5a43cc' fontSize='bold'  key={header.id} colSpan={header.colSpan}>
                     {header.isPlaceholder ? null : (
                       <Stack>
                         <Box>
@@ -155,10 +155,10 @@ export const DataTable = ({ data }) => {
           </Thead>
           <Tbody>
             {table.getRowModel().rows.map(row => (
-              <Tr border='2px' key={row.id}>
+              <Tr key={row.id}>
                 {row.getVisibleCells().map(cell => (
-                  <Td border='2px' key={cell.id}>
-                    <Text color='white'>
+                  <Td border='4px' key={cell.id}>
+                    <Text color='black'>
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </Text>
                   </Td>
@@ -168,7 +168,7 @@ export const DataTable = ({ data }) => {
           </Tbody>
         </Table>
       </TableContainer>
-      <HStack justify='center' color='white'>
+      <HStack justify='center' color='black'>
         <Button  
           onClick={() => table.setPageIndex(0)} 
           isDisabled={!table.getCanPreviousPage()}
