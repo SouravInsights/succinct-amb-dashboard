@@ -74,7 +74,7 @@ const columns = [
     header: () => <span>Status</span>,
   }),
   columnHelper.accessor('message', {
-    cell: info => <Tooltip bg='#5a43cc' hasArrow label={<ToolTipContent content={parseMessage(info.getValue())} />} fontSize='md'><span>{truncateTxHash(info.getValue())}</span></Tooltip>,
+    cell: info => <Tooltip bg='#5a43cc' hasArrow label={<ToolTipContent content={parseMessage(info.getValue())} />} fontSize='md'><span>{truncateAddress(info.getValue())}</span></Tooltip>,
   }),
   columnHelper.accessor(row => row.txHash, {
     id: 'txHash',
