@@ -28,3 +28,7 @@ export function peginateData(options, data) {
     pageCount: Math.ceil(data.length / options.pageSize),
   }
 }
+
+export const parseMessage = (message) => {
+  return ethers.utils.defaultAbiCoder.decode(['uint256', 'address', 'address', 'uint16', 'uint256', 'bytes'], message);
+}

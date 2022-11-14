@@ -12,8 +12,8 @@ import {
   useDisclosure,
 } from '@chakra-ui/react';
 
-import { useConnect, useNetwork, useSwitchNetwork,useAccount } from 'wagmi';
-import { SuccinctGnosisContract, gasSpent, truncateTxHash, truncateAddress, peginateData } from '../utils/general';
+import { useConnect, useNetwork, useSwitchNetwork, useAccount } from 'wagmi';
+import { SuccinctGnosisContract, gasSpent } from '../utils/general';
 import { NavBar, DataTable, Section } from "../components";
 
 export default function App() {
@@ -46,16 +46,16 @@ export default function App() {
           const eventsData = await Promise.all(
             events.map(async (item) => {
               const decodedEvent = await item.decode(item.data, item.topics);
-              const parsedMessage = await ethers.utils.defaultAbiCoder.decode(['uint256', 'address', 'address', 'uint16', 'uint256', 'bytes'], decodedEvent.message);
+              const parsedMessage = ethers.utils.defaultAbiCoder.decode(['uint256', 'address', 'address', 'uint16', 'uint256', 'bytes'], decodedEvent.message);
               const txreceipt = await item.getTransactionReceipt();
               const messageData = {
                 message: decodedEvent.message,
-                txHash: truncateTxHash(txreceipt.transactionHash),
-                sender: truncateAddress(parsedMessage[1]),
+                txHash: txreceipt.transactionHash,
+                sender: parsedMessage[1],
                 status: decodedEvent.status,
-                recipient: truncateAddress(parsedMessage[2]),
+                recipient: parsedMessage[2],
                 gasPaid: `${gasSpent(txreceipt)} xDAI`,
-                executedBy: truncateAddress(txreceipt.from),
+                executedBy: txreceipt.from,
               }
               return messageData;
             })

@@ -8,6 +8,7 @@ import {
   Input,
   Select,
   Button, 
+  Tooltip,
   Table,
   Thead,
   Tbody,
@@ -29,40 +30,63 @@ import {
 } from '@tanstack/react-table';
 import { peginateData } from '../utils/general';
 import { MdFastForward, MdFastRewind, MdSkipPrevious, MdSkipNext } from 'react-icons/md'
+import { truncateTxHash, truncateAddress, parseMessage } from '../utils/general';
+
+const ToolTipContent = (content) => {
+  return (
+    <Stack p={4}>
+      <Text color='white' as='h1' fontWeight='bold'>
+        Nonce:&nbsp;
+        <Text as='span' color='white' fontWeight='normal'>{Number(content.content[0]._hex)}</Text>
+      </Text>
+      <Text color='white' as='h1' fontWeight='bold'>
+        Sender:&nbsp;
+        <Text as='span' color='white' fontWeight='normal'>{content.content[1]}</Text>
+      </Text>
+      <Text color='white' as='h1' fontWeight='bold'>
+        Receiver:&nbsp;
+        <Text as='span' color='white' fontWeight='normal'>{content.content[2]}</Text>
+      </Text>
+      <Text color='white' as='h1' fontWeight='bold'>
+        Chain Id:&nbsp;
+        <Text as='span' color='white' fontWeight='normal'>{content.content[3]}</Text>
+      </Text>
+      <Text color='white' as='h1' fontWeight='bold'>
+        Gas Limit:&nbsp;
+        <Text as='span' color='white' fontWeight='normal'>{Number(content.content[4]._hex)}</Text>
+      </Text>
+    </Stack>
+  )
+}
 
 const columnHelper = createColumnHelper();
 
 const columns = [
   columnHelper.accessor('sender', {
     header: () => 'Sender',
-    cell: info => info.renderValue(),
-    footer: info => info.column.id,
+    cell: info => <Tooltip p={4} bg='#5a43cc' hasArrow label={info.getValue()} fontSize='md'><span>{truncateAddress(info.getValue())}</span></Tooltip>,
   }),
   columnHelper.accessor('recipient', {
+    cell: info => <Tooltip p={4} bg='#5a43cc' hasArrow label={info.getValue()} fontSize='md'><span>{truncateAddress(info.getValue())}</span></Tooltip>,
     header: 'Recipient',
-    footer: info => info.column.id,
   }),
   columnHelper.accessor('status', {
     header: () => <span>Status</span>,
-    footer: info => info.column.id,
   }),
   columnHelper.accessor('message', {
-    cell: info => info.getValue(),
-    footer: info => info.column.id,
+    cell: info => <Tooltip bg='#5a43cc' hasArrow label={<ToolTipContent content={parseMessage(info.getValue())} />} fontSize='md'><span>{truncateTxHash(info.getValue())}</span></Tooltip>,
   }),
   columnHelper.accessor(row => row.txHash, {
     id: 'txHash',
-    cell: info => <i>{info.getValue()}</i>,
+    cell: info => <Tooltip p={4} bg='#5a43cc' hasArrow label={info.getValue()} fontSize='md'><span>{truncateTxHash(info.getValue())}</span></Tooltip>,
     header: () => <span>Tx Hash of Message</span>,
-    footer: info => info.column.id,
   }),
   columnHelper.accessor('gasPaid', {
     header: 'Gas Paid',
-    footer: info => info.column.id,
   }),
   columnHelper.accessor('executedBy', {
+    cell: info => <Tooltip p={4} bg='#5a43cc' hasArrow label={info.getValue()} fontSize='md'><span>{truncateAddress(info.getValue())}</span></Tooltip>,
     header: 'Executed By',
-    footer: info => info.column.id,
   }),
 ]
 
@@ -157,10 +181,8 @@ export const DataTable = ({ data }) => {
             {table.getRowModel().rows.map(row => (
               <Tr key={row.id}>
                 {row.getVisibleCells().map(cell => (
-                  <Td border='4px' key={cell.id}>
-                    <Text color='black'>
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                    </Text>
+                  <Td border='4px' key={cell.id} sx={{ wordBreak: "break-all" }}>
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </Td>
                 ))}
               </Tr>
@@ -264,38 +286,36 @@ const Filter = ({
   )
 
   return typeof firstValue === 'number' ? (
-    <div>
-      <div>
-        <DebouncedInput
-          type="number"
-          min={Number(column.getFacetedMinMaxValues()?.[0] ?? '')}
-          max={Number(column.getFacetedMinMaxValues()?.[1] ?? '')}
-          value={(columnFilterValue)?.[0] ?? ''}
-          onChange={value =>
-            column.setFilterValue((old) => [value, old?.[1]])
-          }
-          placeholder={`Min ${
-            column.getFacetedMinMaxValues()?.[0]
-              ? `(${column.getFacetedMinMaxValues()?.[0]})`
-              : ''
-          }`}
-        />
-        <DebouncedInput
-          type="number"
-          min={Number(column.getFacetedMinMaxValues()?.[0] ?? '')}
-          max={Number(column.getFacetedMinMaxValues()?.[1] ?? '')}
-          value={(columnFilterValue)?.[1] ?? ''}
-          onChange={value =>
-            column.setFilterValue((old) => [old?.[0], value])
-          }
-          placeholder={`Max ${
-            column.getFacetedMinMaxValues()?.[1]
-              ? `(${column.getFacetedMinMaxValues()?.[1]})`
-              : ''
-          }`}
-        />
-      </div>
-    </div>
+    <>
+      <DebouncedInput
+        type="number"
+        min={Number(column.getFacetedMinMaxValues()?.[0] ?? '')}
+        max={Number(column.getFacetedMinMaxValues()?.[1] ?? '')}
+        value={(columnFilterValue)?.[0] ?? ''}
+        onChange={value =>
+          column.setFilterValue((old) => [value, old?.[1]])
+        }
+        placeholder={`Min ${
+          column.getFacetedMinMaxValues()?.[0]
+            ? `(${column.getFacetedMinMaxValues()?.[0]})`
+            : ''
+        }`}
+      />
+      <DebouncedInput
+        type="number"
+        min={Number(column.getFacetedMinMaxValues()?.[0] ?? '')}
+        max={Number(column.getFacetedMinMaxValues()?.[1] ?? '')}
+        value={(columnFilterValue)?.[1] ?? ''}
+        onChange={value =>
+          column.setFilterValue((old) => [old?.[0], value])
+        }
+        placeholder={`Max ${
+          column.getFacetedMinMaxValues()?.[1]
+            ? `(${column.getFacetedMinMaxValues()?.[1]})`
+            : ''
+        }`}
+      />
+    </>
   ) : (
     <>
       <datalist id={column.id + 'list'}>
@@ -340,7 +360,7 @@ const DebouncedInput = ({
       borderColor='#5a43cc'
       _hover={{ border: '2px', borderColor: '#4731b5' }}
       _active={{ border: '2px', borderColor: '#4731b5' }}
-      width='200px' 
+      width='180px' 
       value={value} 
       onChange={e => setValue(e.target.value)} 
       {...props} 
