@@ -95,6 +95,9 @@ export const DataTable = ({ data }) => {
         </Tooltip>
       ),
     }),
+    columnHelper.accessor('message', {
+      cell: info => <Tooltip bg='#5a43cc' hasArrow label={<ToolTipContent content={parseMessage(info.getValue())} />} fontSize='md'><span>{truncateAddress(info.getValue())}</span></Tooltip>,
+    }),
     columnHelper.accessor('status', {
       header: () => <span>Status</span>,
       cell: info => info.getValue() === true ? (
@@ -108,9 +111,6 @@ export const DataTable = ({ data }) => {
             <TagRightIcon boxSize='12px' as={FaTimes} />
           </Tag> 
         )
-    }),
-    columnHelper.accessor('message', {
-      cell: info => <Tooltip bg='#5a43cc' hasArrow label={<ToolTipContent content={parseMessage(info.getValue())} />} fontSize='md'><span>{truncateAddress(info.getValue())}</span></Tooltip>,
     }),
     columnHelper.accessor(row => row.txHash, {
       id: 'txHash',
