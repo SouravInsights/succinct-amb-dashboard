@@ -221,7 +221,7 @@ export const DataTable = ({ data }) => {
               <Tr key={row.id}>
                 {row.getVisibleCells().map(cell => (
                   <Td border='4px' key={cell.id}>
-                    <Text color='black'>
+                    <Text color='#191919' fontWeight='medium'>
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </Text>
                   </Td>

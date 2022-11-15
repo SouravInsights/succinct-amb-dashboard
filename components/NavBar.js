@@ -1,10 +1,12 @@
 import React from 'react';
 import { HStack, Heading, Button } from '@chakra-ui/react';
-import { useDisconnect } from 'wagmi'
+import { useDisconnect, useEnsName } from 'wagmi'
 import { truncateAddress } from '../utils/general';
 
 export const NavBar = ({ connectWalletClick, isConnected, address }) => {
-  const { disconnect } = useDisconnect()
+  const { disconnect } = useDisconnect();
+  const { data: ensName } = useEnsName({ address })
+
   return (
     <HStack
       as='nav'
@@ -28,8 +30,8 @@ export const NavBar = ({ connectWalletClick, isConnected, address }) => {
       <Heading color="#5a43cc" fontSize= "35px" fontWeight="400">Succinct</Heading>
       {isConnected ? (
         <HStack spacing={4}>
-          <Heading color="#5a43cc" fontSize= "22px" fontWeight="400">
-            {`${truncateAddress(address)}`}
+          <Heading color="#5a43cc" fontSize= "22px" fontWeight="semibold">
+            {ensName || `${truncateAddress(address)}`}
           </Heading>
           <Button bg='#5a43cc' color='white' _hover={{ bg: "#4731b5"}} _active={{ bg: "#4731b5"}} onClick={() => disconnect()}>
             Disconnect
