@@ -16,6 +16,8 @@ import { useConnect, useNetwork, useSwitchNetwork, useAccount } from 'wagmi';
 import { SuccinctGnosisContract, gasSpent } from '../utils/general';
 import { NavBar, DataTable, Section } from "../components";
 
+import { defaultTableData } from '../lib/data/tableData';
+
 export default function App() {
   const { isConnected, address } = useAccount()
   const { connect, connectors, isLoading, pendingConnector } = useConnect();
@@ -30,7 +32,7 @@ export default function App() {
     onWalletModalClose();
   }
 
-  const [data, setData] = useState(() => [], []);
+  const [data, setData] = useState(() => [...defaultTableData]);
 
   /* 
     Succinct Gnosis Events 

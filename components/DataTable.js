@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import {
   Box,
   VStack,
@@ -8,6 +8,10 @@ import {
   Input,
   Select,
   Button, 
+  Link,
+  Tag, 
+  TagLabel,
+  TagRightIcon,
   Tooltip,
   Table,
   Thead,
@@ -29,70 +33,113 @@ import {
   getSortedRowModel,
 } from '@tanstack/react-table';
 import { peginateData } from '../utils/general';
-import { MdFastForward, MdFastRewind, MdSkipPrevious, MdSkipNext } from 'react-icons/md'
+import { MdFastForward, MdFastRewind } from 'react-icons/md';
+import { FaCaretLeft, FaCaretRight, FaCheck, FaTimes } from 'react-icons/fa'
 import { truncateTxHash, truncateAddress, parseMessage } from '../utils/general';
-
-const ToolTipContent = (content) => {
-  return (
-    <Stack p={4}>
-      <Text color='white' as='h1' fontWeight='bold'>
-        Nonce:&nbsp;
-        <Text as='span' color='white' fontWeight='normal'>{Number(content.content[0]._hex)}</Text>
-      </Text>
-      <Text color='white' as='h1' fontWeight='bold'>
-        Sender:&nbsp;
-        <Text as='span' color='white' fontWeight='normal'>{content.content[1]}</Text>
-      </Text>
-      <Text color='white' as='h1' fontWeight='bold'>
-        Receiver:&nbsp;
-        <Text as='span' color='white' fontWeight='normal'>{content.content[2]}</Text>
-      </Text>
-      <Text color='white' as='h1' fontWeight='bold'>
-        Chain Id:&nbsp;
-        <Text as='span' color='white' fontWeight='normal'>{content.content[3]}</Text>
-      </Text>
-      <Text color='white' as='h1' fontWeight='bold'>
-        Gas Limit:&nbsp;
-        <Text as='span' color='white' fontWeight='normal'>{Number(content.content[4]._hex)}</Text>
-      </Text>
-    </Stack>
-  )
-}
-
-const columnHelper = createColumnHelper();
-
-const columns = [
-  columnHelper.accessor('sender', {
-    header: () => 'Sender',
-    cell: info => <Tooltip p={4} bg='#5a43cc' hasArrow label={info.getValue()} fontSize='md'><span>{truncateAddress(info.getValue())}</span></Tooltip>,
-  }),
-  columnHelper.accessor('recipient', {
-    cell: info => <Tooltip p={4} bg='#5a43cc' hasArrow label={info.getValue()} fontSize='md'><span>{truncateAddress(info.getValue())}</span></Tooltip>,
-    header: 'Recipient',
-  }),
-  columnHelper.accessor('status', {
-    header: () => <span>Status</span>,
-  }),
-  columnHelper.accessor('message', {
-    cell: info => <Tooltip bg='#5a43cc' hasArrow label={<ToolTipContent content={parseMessage(info.getValue())} />} fontSize='md'><span>{truncateAddress(info.getValue())}</span></Tooltip>,
-  }),
-  columnHelper.accessor(row => row.txHash, {
-    id: 'txHash',
-    cell: info => <Tooltip p={4} bg='#5a43cc' hasArrow label={info.getValue()} fontSize='md'><span>{truncateTxHash(info.getValue())}</span></Tooltip>,
-    header: () => <span>Tx Hash of Message</span>,
-  }),
-  columnHelper.accessor('gasPaid', {
-    header: 'Gas Paid',
-  }),
-  columnHelper.accessor('executedBy', {
-    cell: info => <Tooltip p={4} bg='#5a43cc' hasArrow label={info.getValue()} fontSize='md'><span>{truncateAddress(info.getValue())}</span></Tooltip>,
-    header: 'Executed By',
-  }),
-]
 
 export const DataTable = ({ data }) => {
 
-  const defaultData = React.useMemo(() => [], []);
+  const ToolTipContent = (content) => {
+    return (
+      <Stack p={4}>
+        <Text color='white' as='h1' fontWeight='bold'>
+          Nonce:&nbsp;
+          <Text as='span' color='white' fontWeight='normal'>{Number(content.content[0]._hex)}</Text>
+        </Text>
+        <Text color='white' as='h1' fontWeight='bold'>
+          Sender:&nbsp;
+          <Text as='span' color='white' fontWeight='normal'>{content.content[1]}</Text>
+        </Text>
+        <Text color='white' as='h1' fontWeight='bold'>
+          Receiver:&nbsp;
+          <Text as='span' color='white' fontWeight='normal'>{content.content[2]}</Text>
+        </Text>
+        <Text color='white' as='h1' fontWeight='bold'>
+          Chain Id:&nbsp;
+          <Text as='span' color='white' fontWeight='normal'>{content.content[3]}</Text>
+        </Text>
+        <Text color='white' as='h1' fontWeight='bold'>
+          Gas Limit:&nbsp;
+          <Text as='span' color='white' fontWeight='normal'>{Number(content.content[4]._hex)}</Text>
+        </Text>
+      </Stack>
+    )
+  }
+
+  const columnHelper = createColumnHelper();
+  
+  const columns = [
+    columnHelper.accessor('sender', {
+      id: 'sender',
+      header: 'Sender',
+      cell: info => (
+        <Tooltip p={4} bg='#5a43cc' openDelay={500} hasArrow label={info.getValue()} fontSize='md'>
+          <Link href={`https://blockscout.com/xdai/mainnet/address/${info.getValue()}`} isExternal>
+            <span>
+              {truncateAddress(info.getValue())}
+            </span>
+          </Link>
+        </Tooltip>
+      ),
+    }),
+    columnHelper.accessor('recipient', {
+      id: 'recipient',
+      header: 'Recipient',
+      cell: info => (
+        <Tooltip p={4} bg='#5a43cc' hasArrow label={info.getValue()} fontSize='md'>
+          <Link href={`https://blockscout.com/xdai/mainnet/address/${info.getValue()}`} isExternal>
+            <span>
+              {truncateAddress(info.getValue())}
+            </span>
+          </Link>
+        </Tooltip>
+      ),
+    }),
+    columnHelper.accessor('status', {
+      header: () => <span>Status</span>,
+      cell: info => info.getValue() === true ? (
+          <Tag variant='subtle' colorScheme='green'>
+            <TagLabel>Received</TagLabel>
+            <TagRightIcon boxSize='12px' as={FaCheck} />
+          </Tag> 
+        ) : (
+          <Tag variant='subtle' bg='red' color='white'>
+            <TagLabel>Not Received</TagLabel>
+            <TagRightIcon boxSize='12px' as={FaTimes} />
+          </Tag> 
+        )
+    }),
+    columnHelper.accessor('message', {
+      cell: info => <Tooltip bg='#5a43cc' hasArrow label={<ToolTipContent content={parseMessage(info.getValue())} />} fontSize='md'><span>{truncateAddress(info.getValue())}</span></Tooltip>,
+    }),
+    columnHelper.accessor(row => row.txHash, {
+      id: 'txHash',
+      cell: info => (
+        <Tooltip p={4} bg='#5a43cc' hasArrow label={info.getValue()} fontSize='md'>
+          <Link href={`https://blockscout.com/xdai/mainnet/tx/${info.getValue()}`} isExternal>
+            <span>{truncateTxHash(info.getValue())}</span>
+          </Link>
+        </Tooltip>
+      ),
+      header: () => <span>Tx Hash of Message</span>,
+    }),
+    columnHelper.accessor('gasPaid', {
+      header: 'Gas Paid',
+    }),
+    columnHelper.accessor('executedBy', {
+      id: 'executedBy',
+      cell: info => (
+        <Tooltip p={4} bg='#5a43cc' hasArrow label={info.getValue()} fontSize='md'>
+          <Link href={`https://blockscout.com/xdai/mainnet/address/${info.getValue()}`} isExternal>
+            <span>
+              {truncateAddress(info.getValue())}
+            </span>
+          </Link>
+        </Tooltip>
+      ),
+      header: 'Executed By',
+    }),
+  ]
 
   const [{ pageIndex, pageSize }, setPagination] =
   useState({
@@ -107,7 +154,7 @@ export const DataTable = ({ data }) => {
 
   const paginatedData = peginateData(fetchDataOptions, data);
 
-  const pagination = React.useMemo(
+  const pagination = useMemo(
     () => ({
       pageIndex,
       pageSize,
@@ -118,7 +165,7 @@ export const DataTable = ({ data }) => {
   const [columnFilters, setColumnFilters] = useState([]);
 
   const table = useReactTable({
-    data: paginatedData?.rows ?? defaultData,
+    data: paginatedData.rows,
     columns,
     pageCount: paginatedData?.pageCount ?? -1,
     state: {
@@ -139,14 +186,6 @@ export const DataTable = ({ data }) => {
     debugHeaders: true,
     debugColumns: false,
   });
-
-  useEffect(() => {
-    if (table.getState().columnFilters[0]?.id === 'sender') {
-      if (table.getState().sorting[0]?.id !== 'sender') {
-        table.setSorting([{ id: 'sender', desc: false }])
-      }
-    }
-  }, [table.getState().columnFilters[0]?.id])
 
   return (
     <VStack spacing={12} my={16}>
@@ -181,8 +220,10 @@ export const DataTable = ({ data }) => {
             {table.getRowModel().rows.map(row => (
               <Tr key={row.id}>
                 {row.getVisibleCells().map(cell => (
-                  <Td border='4px' key={cell.id} sx={{ wordBreak: "break-all" }}>
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  <Td border='4px' key={cell.id}>
+                    <Text color='black'>
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </Text>
                   </Td>
                 ))}
               </Tr>
@@ -203,14 +244,14 @@ export const DataTable = ({ data }) => {
           isDisabled={!table.getCanPreviousPage()}
           bg='#5a43cc' _hover={{ bg: "#4731b5"}}
         >
-          <MdSkipPrevious color='white' />
+          <FaCaretLeft color='white' />
         </Button>
         <Button
           onClick={() => table.nextPage()}
           isDisabled={!table.getCanNextPage()}
           bg='#5a43cc' _hover={{ bg: "#4731b5"}}
         >
-          <MdSkipNext color='white' />
+          <FaCaretRight color='white' />
         </Button>
         <Button
           onClick={() => table.setPageIndex(table.getPageCount() - 1)}
@@ -277,7 +318,7 @@ const Filter = ({
 
   const columnFilterValue = column.getFilterValue()
 
-  const sortedUniqueValues = React.useMemo(
+  const sortedUniqueValues = useMemo(
     () =>
       typeof firstValue === 'number'
         ? []
@@ -285,38 +326,7 @@ const Filter = ({
     [column.getFacetedUniqueValues()]
   )
 
-  return typeof firstValue === 'number' ? (
-    <>
-      <DebouncedInput
-        type="number"
-        min={Number(column.getFacetedMinMaxValues()?.[0] ?? '')}
-        max={Number(column.getFacetedMinMaxValues()?.[1] ?? '')}
-        value={(columnFilterValue)?.[0] ?? ''}
-        onChange={value =>
-          column.setFilterValue((old) => [value, old?.[1]])
-        }
-        placeholder={`Min ${
-          column.getFacetedMinMaxValues()?.[0]
-            ? `(${column.getFacetedMinMaxValues()?.[0]})`
-            : ''
-        }`}
-      />
-      <DebouncedInput
-        type="number"
-        min={Number(column.getFacetedMinMaxValues()?.[0] ?? '')}
-        max={Number(column.getFacetedMinMaxValues()?.[1] ?? '')}
-        value={(columnFilterValue)?.[1] ?? ''}
-        onChange={value =>
-          column.setFilterValue((old) => [old?.[0], value])
-        }
-        placeholder={`Max ${
-          column.getFacetedMinMaxValues()?.[1]
-            ? `(${column.getFacetedMinMaxValues()?.[1]})`
-            : ''
-        }`}
-      />
-    </>
-  ) : (
+  return (
     <>
       <datalist id={column.id + 'list'}>
         {sortedUniqueValues.slice(0, 200).map((value) => (
@@ -340,7 +350,7 @@ const DebouncedInput = ({
   debounce = 500,
   ...props
 }) => {
-  const [value, setValue] = useState(initialValue)
+  const [value, setValue] = useState(initialValue);
 
  useEffect(() => {
     setValue(initialValue)

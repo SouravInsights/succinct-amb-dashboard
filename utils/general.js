@@ -21,7 +21,7 @@ export const truncateTxHash = (hash) =>
 
 export function peginateData(options, data) {
   return {
-    rows: data.slice(
+    rows: data?.slice(
       options.pageIndex * options.pageSize,
       (options.pageIndex + 1) * options.pageSize
     ),
