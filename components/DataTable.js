@@ -98,12 +98,12 @@ export const DataTable = ({ data }) => {
     columnHelper.accessor('status', {
       header: () => <span>Status</span>,
       cell: info => info.getValue() === true ? (
-          <Tag variant='subtle' colorScheme='green'>
+          <Tag variant='subtle' bg='#2E7D32' color='white'>
             <TagLabel>Received</TagLabel>
             <TagRightIcon boxSize='12px' as={FaCheck} />
           </Tag> 
         ) : (
-          <Tag variant='subtle' bg='red' color='white'>
+          <Tag variant='subtle' bg='#f44336' color='white'>
             <TagLabel>Not Received</TagLabel>
             <TagRightIcon boxSize='12px' as={FaTimes} />
           </Tag> 
